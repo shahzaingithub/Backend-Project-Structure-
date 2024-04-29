@@ -1,8 +1,9 @@
 import { Timestamp } from "mongodb";
 import {mongoose,Schema} from "mongoose";
-import { JsonWebTokenError } from "jsonwebtoken";
+import jwt from "jsonwebtoken"
 import bcrypt from "bcrypt"
-const userSchema=async=new Schema({
+
+const userSchema=new Schema({
     username:{
         type:String,
         required:true,
@@ -31,10 +32,14 @@ const userSchema=async=new Schema({
     coverImage: {
         type: String, // cloudinary url
     },
-    watchHistory:{
+    watchHistory:[
+        {
         type:Schema.Types.ObjectId,
         ref:"Video"
-    },
+    }
+    ],
+
+
     password:{
         type:String,
         required:[true,'Password Is Required']
@@ -46,7 +51,7 @@ const userSchema=async=new Schema({
 
 
 },{
-    timestamp:true
+    timestamps:true
 })
 
 userSchema.pre("save",async function (next) {
