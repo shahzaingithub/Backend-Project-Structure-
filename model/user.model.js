@@ -38,13 +38,11 @@ const userSchema=new Schema({
         ref:"Video"
     }
     ],
-
-
     password:{
         type:String,
         required:[true,'Password Is Required']
     },
-        refreshtoken:{
+    refreshToken:{
             type:String
         }
     
@@ -74,7 +72,7 @@ userSchema.methods.generateAccessToken = function(){
         },
         process.env.ACCESS_TOKEN_SECRET,
         {
-            expiresIn: process.env.ACCESS_TOKEN_EXPIRY
+            expiresIn: process.env.ACCESS_EXPIRY_TOKEN
         }
     )
 }
@@ -82,7 +80,6 @@ userSchema.methods.generateRefreshToken = function(){
     return jwt.sign(
         {
             _id: this._id,
-            
         },
         process.env.REFRESH_TOKEN_SECRET,
         {

@@ -2,28 +2,25 @@ import { ApiError } from '../utils/ApiError.js';
 import asyncHandler from '../utils/asyncHandler.js';
 
 // user exist
-// import User from '../model/user.model.js'
-
 import { User } from '../model/user.model.js';
-
 import { uploadonCloudinary } from '../utils/cloudinary.js';
 
 import { ApiResponse } from '../utils/ApiResponse.js';
+import jwt from 'jsonwebtoken'
+import mongoose from 'mongoose';
 
-
-const generateAccessAndRefreshToken=async(userId)=>{
+const generateAccessAndRefreshToken = async(userId) =>{
     try {
         const user = await User.findById(userId)
-        const accessToken=user.generateAccessToken()
-        const refreshToken=user.generateRefreshToken()
+        const accessToken = user.generateAccessToken()
+        const refreshToken = user.generateRefreshToken()
+        user.refreshToken = refreshToken
+        await user.save({ validateBeforeSave: false })
 
-        user.refreshToken=refreshToken
-        await user.save({validateBeforeSave:false})
+        return {accessToken, refreshToken}
         
-        return {accessToken,refreshToken}
-
     } catch (error) {
-        throw new ApiError(500,"Something went wrong while generating refresh and access token");
+        throw new ApiError(500, "Something went wrong while generating referesh and access token")
     }
 }
 
@@ -108,7 +105,7 @@ const registerUser=asyncHandler (async(req,res)=>{
     "-password -refreshToken"
    )
    if(!createdUser){
-    throw new ApiError(500,"Something went wrong while registring the user");
+    throw new ApiError(500,"Something went wrong while generating referesh and access tokeng went wrong while registring the user");
    }
 
 //    now response
@@ -131,7 +128,7 @@ const logginUser=asyncHandler(async(req,res)=>{
 
     const {username,email,password}=req.body
 
-    if(!username || !email){
+    if(!username && !email){
         throw new ApiError(400,'Username or email is required ')
     }
 
@@ -152,8 +149,8 @@ const logginUser=asyncHandler(async(req,res)=>{
 
     const {accessToken,refreshToken} = await generateAccessAndRefreshToken(user._id)
     
-    const loggedInUser=User.findById(user._id).
-    select("-password -refreshToken")
+    const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
+
 
     const options={
         httpOnly:true,
