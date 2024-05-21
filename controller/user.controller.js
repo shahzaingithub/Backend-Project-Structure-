@@ -5,6 +5,8 @@ import asyncHandler from '../utils/asyncHandler.js';
 import { User } from '../model/user.model.js';
 import { uploadonCloudinary } from '../utils/cloudinary.js';
 
+import {Blog} from '../model/blog.model.js';
+
 import { ApiResponse } from '../utils/ApiResponse.js';
 import jwt from 'jsonwebtoken'
 import mongoose from 'mongoose';
@@ -31,7 +33,7 @@ const registerUser=asyncHandler (async(req,res)=>{
 // 1) Get user details from frontend
 // 2) validation -not empty
 // 3) check if user already exist : username ,email
-// 4)check for coverImage ,chch for avatar
+// 4)check for coverImage ,chech for avatar
 // 5) upload them to cloudinary ,avatar
 // 6) create user object  - create entry in db
 // 7) remove password and refresh token field from response
@@ -346,6 +348,53 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
             new ApiResponse(400,user,"Cover Image updated successfully")
         )
     })
+
+
+    // blog website
+    const addBlog = asyncHandler(async (req, res) => {
+        const { title, description, author } = req.body;
+    
+        if ([title, description, author].some((field) => field?.trim() === "")) {
+            throw new ApiError(400, "Title, description, and author are required");
+        }
+    
+        const coverImageLocalPath = req.files?.coverImage?.[0]?.path;
+        if (!coverImageLocalPath) {
+            throw new ApiError(400, "Cover image file is required");
+        }
+    
+        const coverImage = await uploadonCloudinary(coverImageLocalPath);
+        if (!coverImage) {
+            throw new ApiError(500, "Failed to upload cover image");
+        }
+    
+        const blog = await Blog.create({
+            title,
+            description,
+            coverImage: coverImage.url,
+            author
+        });
+    
+        if (!blog) {
+            throw new ApiError(500, "Something went wrong while creating the blog");
+        }
+    
+        return res.status(201).json(
+            new ApiResponse(200, blog, "Blog created successfully")
+        );
+    });
+    // get all blogs
+    const getBlogs = asyncHandler(async (req, res) => {
+        const blogs = await Blog.find().populate("author");
+        if (!blogs) {
+            throw new ApiError(404, "No blogs found");
+        }
+        return res.status(200).json(
+            new ApiResponse(200, blogs, "Blogs fetched successfully")
+        );
+    });
+    
+
 export {
     registerUser,
     logginUser,
@@ -355,5 +404,7 @@ export {
     getCurrentUser,
     updateAccountDetails,
     UpdateUserAvatar,
-    UpdateUserCoverImage   
+    UpdateUserCoverImage,
+    addBlog,
+    getBlogs
 }

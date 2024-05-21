@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { logginUser, logoutUser, registerUser, refreshAccessToken,changeCurrentPassword,getCurrentUser,updateAccountDetails,UpdateUserAvatar,UpdateUserCoverImage } from "../controller/user.controller.js";
+import { logginUser, logoutUser, registerUser, refreshAccessToken,changeCurrentPassword,getCurrentUser,updateAccountDetails,UpdateUserAvatar,UpdateUserCoverImage,addBlog,getBlogs } from "../controller/user.controller.js";
 
 import {upload} from "../middleware/multer.middleware.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
@@ -32,5 +32,14 @@ router.route("/update-account").patch(verifyJWT, updateAccountDetails)
 router.route("/avatar").patch(verifyJWT, upload.single("avatar"), UpdateUserAvatar)
 router.route("/cover-image").patch(verifyJWT, upload.single("coverImage"), UpdateUserCoverImage)
 
-    
+// add blog
+router.route("/add-blog").post(
+    upload.fields([
+        { name: "coverImage", maxCount: 1 }
+    ]),       
+    addBlog
+);
+// get all blogs
+router.route("/get-blogs").get(getBlogs)
+
 export default router
